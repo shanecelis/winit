@@ -572,8 +572,14 @@ impl Shared {
             Ok(RunnerEnum::Destroyed) => unreachable!(),
         }
         if !process_immediately {
-            // Queue these events to look at later
-            self.0.events.borrow_mut().extend(events);
+            // Hold the borrow for one push only. Callers pass lazy iterators
+            // that call into JS while polled (pointermove: `getCoalescedEvents`,
+            // `offsetX`, which flushes layout). A synchronous DOM listener on
+            // that stack may call `send_events` again; a borrow spanning the
+            // poll would panic with "RefCell already borrowed".
+            for event in events {
+                self.0.events.borrow_mut().push_back(event);
+            }
             return;
         }
         // At this point, we know this is a fresh set of events

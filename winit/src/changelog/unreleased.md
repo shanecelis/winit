@@ -43,3 +43,5 @@ changelog entry.
 ### Fixed
 
 - On macOS, fix text selected from the Character Viewer not producing an IME commit.
+- On Web, fix a panic ("RefCell already borrowed") when pointer events are
+  queued while the event loop is already running.
